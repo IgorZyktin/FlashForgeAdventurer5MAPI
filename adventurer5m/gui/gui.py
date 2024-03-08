@@ -15,7 +15,7 @@ def graphical_user_interface(language: str, printer_address: str):
 
     return render_template(
         f'index_ru.html' if language.lower() == 'ru' else 'index_en.html',
-        printer_address=printer_address,
+        printer_address=f'{printer_ip}:{printer_port}',
         printer_ip=printer_ip,
         printer_port=printer_port,
     )

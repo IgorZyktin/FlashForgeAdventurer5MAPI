@@ -6,7 +6,7 @@ from adventurer5m.api.commands_base import BaseCommand, register
 
 NamedNumber = re.compile(
     r"""
-    (\w+)           # one or more letters
+    ([\w-]+)           # one or more letters
     :               # semicolon
     \s*?            # optional space
     (\d+\.\d+|\d+)  # one or more digits, possibly float
@@ -16,7 +16,7 @@ NamedNumber = re.compile(
 
 NamedDelta = re.compile(
     r"""
-    (\w+\d+)        # one or more letters followed by one or more digits
+    (\w+\d*?)       # one or more letters followed by zero or more digits
     :               # semicolon
     \s*?            # optional space
     (\d+\.\d+|\d+)  # one or more digits, possibly float
@@ -84,6 +84,9 @@ class Temperature(BaseCommand):
         line = next(self._pre_parse())
         for each in NamedDelta.finditer(line):
             category, current, target = each.groups()
+            if category.casefold() == 'B'.casefold():
+                category = 'Bed'
+
             result[category.strip()] = {
                 'current': float(current),
                 'target': float(target),
@@ -142,7 +145,7 @@ class Info(BaseCommand):
             if total == 3:
                 for each in NamedNumber.finditer(line):
                     key, value = each.groups()
-                    result[key.strip()] = float(value.strip())
+                    result[key.strip() + '-zone'] = float(value.strip())
             else:
                 key, value = line.split(':', maxsplit=1)
                 result[key.strip()] = value.strip()

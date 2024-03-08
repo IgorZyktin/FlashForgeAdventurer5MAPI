@@ -14,7 +14,22 @@ def execute(printer_ip, printer_port, command: BaseCommand) -> None:
     _socket.settimeout(TIMEOUT_SECONDS)
     _socket.connect((printer_ip, printer_port))
     _socket.send(command.code.encode())
-    data = _socket.recv(BUFFER_SIZE)
+
+    chunks = []
+    bytes_received = 0
+    while True:
+        chunk = _socket.recv(BUFFER_SIZE)
+
+        if chunk:
+            chunks.append(chunk)
+
+        if len(chunk) < BUFFER_SIZE:
+            break
+
+        bytes_received += len(chunk)
+
+    data = b''.join(chunks)
+
     _socket.close()
     command.response = data.decode()
 

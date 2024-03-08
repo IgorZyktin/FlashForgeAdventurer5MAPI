@@ -1,14 +1,16 @@
 """Handlers for JSON-formatted responses."""
 import json
+import logging
 from http import HTTPStatus
 
-from flask import Blueprint, Response
+from flask import Blueprint, Response, url_for
 from flask import abort
 
 from adventurer5m import api as api_module
 from adventurer5m import exceptions
 
 api = Blueprint('api', __name__)
+LOG = logging.getLogger(__name__)
 
 
 class JsonResponse(Response):
@@ -48,6 +50,7 @@ def execute_command(printer_address: str, command_name: str):
             command=command,
         )
     except exceptions.GeneralException as exc:
+        LOG.exception('Got internal error')
         payload = {'error': str(exc)}
         abort(
             JsonResponse(
@@ -56,6 +59,7 @@ def execute_command(printer_address: str, command_name: str):
             ),
         )
     except TimeoutError:
+        LOG.exception('Request timed out')
         payload = {'error': f'printer is not available on {printer_address}'}
         abort(
             JsonResponse(

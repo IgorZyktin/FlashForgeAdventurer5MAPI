@@ -10,3 +10,19 @@
 | ~M115\r\n    | Получить информацию о принтере      |
 | ~M119\r\n    | Получить текущий статус принтера    |
 | ~M601 S1\r\n | Приветствие для начала работы       |
+
+## Непосредственная работа с API
+
+Если есть желание, вы можете вручную запрашивать данные у API.
+
+Примеры запросов:
+
+```shell
+PRINTER_IP=192.168.1.45
+curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/progress
+curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/temperature
+curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/position
+curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/info
+curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/status
+curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/hello
+```

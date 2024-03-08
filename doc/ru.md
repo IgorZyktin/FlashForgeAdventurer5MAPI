@@ -15,10 +15,23 @@
 
 | Код                      | Действие             |
 |--------------------------|----------------------|
+| ~M25\r\n                 | Пауза?               |
 | ~M26\r\n                 | Остановить печать?   |
+| ~G28\r\n                 | Home?                |
 | ~M146 r255 g255 b255\r\n | Включить подсветку?  |
 | ~M146 r0 g0 b0\r\n       | Выключить подсветку? |
+| ~M148\r\n                | Издать звук?         |
 | ~M650\r\n                | Калибровка?          |
+
+```
+To print from file: 'M650', 'M28 <file size> 0:/user/<file name>', encode the file with base64 and then send 4096 bytes each time, 'M29', 'M23 0:/user/<file name>'
+
+Max length for file name is 36 bytes. File size is the base64 encoded size.
+
+Update; To send a file with TCP socket to Finder: Do not encode with base64, still send 4096 bytes at a time but add 16 bytes at the start. The first four bytes should be 0x5a, 0x5a, 0xa5, 0xa5. Next four bytes should be a four byte unsigned big endian counter starting at 0. Next four bytes should be a four byte unsigned big endian data length (4096, except last packet). The last four bytes should be a big endian CRC32 of the data for that packet. The last packet has to be padded with 0x00 until the data length is 4096 bytes. The CRC is for the data without padding.
+
+To connect through USB I used pyusb (https://github.com/pyusb/pyusb). Search for the printer with vendor '0x2b71' and product '0x0002'. You can send commands to endpoint 0x1 and read response from endpoint 0x81. To send a file you use endpoint 0x3.
+```
 
 ## Установка
 

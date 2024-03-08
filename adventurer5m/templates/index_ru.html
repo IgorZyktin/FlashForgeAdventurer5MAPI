@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ printer_ip }}:{{ printer_port }}</title>
+    <script src="{{ url_for('static', filename='code.js') }}"></script>
+    <style>
+        body {
+          background-color: gray;
+          text-align: center;
+          font-family: "Lucida Console", "Courier New", monospace;
+        }
+    </style>
+</head>
+<body>
+
+<img src="http://{{ printer_ip }}:8080/?action=stream" alt="video from the printer" style="width: 100%; max-width: 1024px; margin: auto; display: block">
+
+<div style="display: flex; justify-content: space-around">
+    <div>
+        <h2>Температура</h2>
+        <p>T0: <span id="T0.current">???</span>/<span id="T0.target">???</span></p>
+        <p>T1: <span id="T1.current">???</span>/<span id="T1.target">???</span></p>
+        <p>Постель: <span id="Bed.current">???</span>/<span id="Bed.target">???</span></p>
+    </div>
+
+    <div>
+        <h2>Прогресс</h2>
+        <p>Байты: <span id="byte.current">???</span> из <span id="byte.target">???</span></p>
+        <p>Слои: <span id="Layer.current">???</span> из <span id="Layer.target">???</span></p>
+    </div>
+
+    <div>
+        <h2>Положение</h2>
+        <p>X: <span id="X">???</span></p>
+        <p>Y: <span id="Y">???</span></p>
+        <p>Z: <span id="Z">???</span></p>
+        <p>A: <span id="A">???</span></p>
+        <p>B: <span id="B">???</span></p>
+    </div>
+
+    <div>
+        <h2>Статус</h2>
+        <p>Концевики:
+            X-<span id="Endstop.X-max">???</span>
+            Y-<span id="Endstop.Y-max">???</span>
+            Z-<span id="Endstop.Z-min">???</span>
+        </p>
+        <p>Статус: <span id="MachineStatus">???</span></p>
+        <p>Режим: <span id="MoveMode">???</span></p>
+        <p>Дополнительно:
+            S-<span id="Status.S">???</span>
+            L-<span id="Status.L">???</span>
+            J-<span id="Status.J">???</span>
+            F-<span id="Status.F">???</span>
+        </p>
+        <p>Подсветка: <span id="LED">???</span></p>
+        <p>Файл: <span id="CurrentFile">???</span></p>
+    </div>
+
+    <div>
+        <h2>Информация о принтере</h2>
+        <p>Тип: <span id="Machine Type">???</span></p>
+        <p>Название: <span id="Machine Name">???</span></p>
+        <p>Версия прошивки: <span id="Firmware">???</span></p>
+        <p>Серийный номер: <span id="SN">???</span></p>
+        <p>Зона печати:
+            X-<span id="X-zone">???</span>
+            Y-<span id="Y-zone">???</span>
+            Z-<span id="Z-zone">???</span>
+        </p>
+        <p>Число головок: <span id="Tool Count"></span></p>
+        <p>MAC адрес: <span id="Mac Address"></span></p>
+    </div>
+</div>
+
+<script>
+    async function main() {
+        await askAPI('{{ url_for("api.execute_command", printer_address=printer_address, command_name="status") }}')
+        await askAPI('{{ url_for("api.execute_command", printer_address=printer_address, command_name="progress") }}')
+        await askAPI('{{ url_for("api.execute_command", printer_address=printer_address, command_name="temperature") }}')
+        await askAPI('{{ url_for("api.execute_command", printer_address=printer_address, command_name="position") }}')
+    }
+
+    askAPI('{{ url_for("api.execute_command", printer_address=printer_address, command_name="info") }}')
+
+    const intervalID = setInterval(function () {
+        main();
+    }, 5000);
+</script>
+
+</body>
+</html>

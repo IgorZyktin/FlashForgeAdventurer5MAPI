@@ -1,19 +1,21 @@
 """Handlers for human-readable responses."""
-from flask import Blueprint
+from flask import Blueprint, render_template
 
-from adventurer5m import api
+from adventurer5m import api as api_module
 
 gui = Blueprint('gui', __name__)
 
 
-@gui.route('/gui/<string:printer_ip>/<int:printer_port>')
-def hello_world(printer_ip: str, printer_port: int):
-    """Return something."""
-    hello = api.commands.Temperature()
-    api.transport.execute(
+@gui.route('/<string:language>/<string:printer_address>')
+def graphical_user_interface(language: str, printer_address: str):
+    """Render human-readable HTML page."""
+    printer_ip, printer_port = api_module.transport.get_location(
+        printer_address=printer_address,
+    )
+
+    return render_template(
+        f'index_ru.html' if language.lower() == 'ru' else 'index_en.html',
+        printer_address=printer_address,
         printer_ip=printer_ip,
         printer_port=printer_port,
-        command=hello,
     )
-    print(hello.response)
-    return "<p>Hello, World!</p>"

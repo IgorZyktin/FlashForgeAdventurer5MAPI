@@ -10,8 +10,6 @@ from adventurer5m import exceptions
 
 api = Blueprint('api', __name__)
 
-DEFAULT_PORT = 8899
-
 
 class JsonResponse(Response):
     """JSON-specific response."""
@@ -27,14 +25,6 @@ def index():
 @api.route('/api/execute/<string:printer_address>/<string:command_name>')
 def execute_command(printer_address: str, command_name: str):
     """Ask printer and return result of the command."""
-    if ':' in printer_address:
-        pair = printer_address.split(':')
-        printer_ip = pair[0]
-        printer_port = int(pair[1])
-    else:
-        printer_ip = printer_address
-        printer_port = DEFAULT_PORT
-
     command_type = api_module.commands_base.get_command(command_name)
 
     if command_type is None:
@@ -47,6 +37,9 @@ def execute_command(printer_address: str, command_name: str):
         )
 
     command = command_type()
+    printer_ip, printer_port = api_module.transport.get_location(
+        printer_address=printer_address,
+    )
 
     try:
         api_module.transport.execute(
@@ -60,6 +53,14 @@ def execute_command(printer_address: str, command_name: str):
             JsonResponse(
                 response=json.dumps(payload, ensure_ascii=False),
                 status=HTTPStatus.NOT_FOUND,
+            ),
+        )
+    except TimeoutError:
+        payload = {'error': f'printer is not available on {printer_address}'}
+        abort(
+            JsonResponse(
+                response=json.dumps(payload, ensure_ascii=False),
+                status=HTTPStatus.REQUEST_TIMEOUT,
             ),
         )
 

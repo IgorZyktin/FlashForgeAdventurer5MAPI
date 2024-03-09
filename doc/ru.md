@@ -35,7 +35,22 @@ To connect through USB I used pyusb (https://github.com/pyusb/pyusb). Search for
 
 ## Установка
 
-Раздел требует проработки.
+Для установки нужен `docker`.
+
+Сборка и запуск:
+
+```shell
+git clone https://github.com/IgorZyktin/FlashForgeAdventurer5MAPI.git
+cd FlashForgeAdventurer5MAPI
+docker build -t flashforge:v0.1 .
+docker run -d -p 9876:9876 flashforge:v0.1
+```
+
+GUI доступен по адресу:
+
+```shell
+http://127.0.0.1:9876/ru/<ip адрес вашего принтера>
+```
 
 ## Непосредственная работа с API
 
@@ -45,10 +60,10 @@ To connect through USB I used pyusb (https://github.com/pyusb/pyusb). Search for
 
 ```shell
 PRINTER_IP=192.168.1.45
-curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/progress
-curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/temperature
-curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/position
-curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/info
-curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/status
-curl http://127.0.0.1:5000/api/execute/${PRINTER_IP}/hello
+curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/progress
+curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/temperature
+curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/position
+curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/info
+curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/status
+curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/hello
 ```

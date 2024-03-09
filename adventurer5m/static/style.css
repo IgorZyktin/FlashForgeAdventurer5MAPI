@@ -1,0 +1,21 @@
+body {
+    background-color: gray;
+    text-align: center;
+    font-family: "Lucida Console", "Courier New", monospace;
+}
+
+#video_feed {
+    width: 100%;
+    max-width: 1024px;
+    margin: auto;
+    display: block;
+}
+
+.container {
+    display: flex;
+    justify-content: space-around;
+}
+
+.element {
+
+}

@@ -1,49 +1,116 @@
-const DEBUG = false;
+const DEBUG = true;
 
-function isObjectLike(value) {
-    return Object.prototype.toString.call(value) === "[object Object]";
+const intervals = {
+    loop: 500,
+    info: 30000,
+    status: 15000,
+    progress: 5000,
+    temperature: 5000,
+    position: 10000,
 }
 
-async function askAPI(url) {
+const nextCheck = {
+    info: 0,
+    status: 0,
+    progress: 0,
+    temperature: 0,
+    position: 0,
+}
+
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+
+
+async function eventLoop(endpoints) {
+    // main loop
+    while (true) {
+        await sleep(intervals['loop'])
+        let now = Date.now()
+
+        if (nextCheck['info'] < now) {
+            if (await updateValues('info', endpoints['info'])) {
+                nextCheck['info'] = now + 9999999999.0
+            } else {
+                nextCheck['info'] = now + intervals['info']
+                continue
+            }
+        }
+
+        if (nextCheck['temperature'] < now) {
+            if (await updateValues('temperature', endpoints['temperature'])) {
+                nextCheck['temperature'] = now + intervals['temperature']
+            } else {
+                continue
+            }
+        }
+
+        if (nextCheck['progress'] < now) {
+            if (await updateValues('progress', endpoints['progress'])) {
+                nextCheck['progress'] = now + intervals['progress']
+            } else {
+                continue
+            }
+        }
+
+        if (nextCheck['status'] < now) {
+            if (await updateValues('status', endpoints['status'])) {
+                nextCheck['status'] = now + intervals['status']
+            } else {
+                continue
+            }
+        }
+
+        if (nextCheck['position'] < now) {
+            if (await updateValues('position', endpoints['position'])) {
+                nextCheck['position'] = now + intervals['position']
+            }
+        }
+    }
+}
+
+async function updateValues(element, url) {
     // perform request and alter text values corresponding to response
+    const parent = document.getElementById(element);
+
     try {
         if (DEBUG) {
             console.log(`Asking ${url}`)
         }
 
         const response = await fetch(url);
-        const payload = await response.json();
+        let payload
 
-        if (DEBUG) {
-            console.log(`Got response: ${JSON.stringify(payload)}`)
+        try {
+            payload = await response.json();
+            if (DEBUG) {
+                console.log(`Got response: ${JSON.stringify(payload)}`)
+            }
+        } catch (error) {
+            console.log(`Got error: ${error} for response ${response}`)
+            parent.style.backgroundColor = 'red'
+            return false
         }
 
         if (response.status !== 200) {
-            alert(payload['error'])
-            clearInterval(intervalID)
-            return
+            console.log(`Got error: ${payload['error']}`)
+            parent.style.backgroundColor = 'red'
+            return false
         }
 
         for (const [key, value] of Object.entries(payload)) {
-            if (isObjectLike(value)) {
-                for (const [sub_key, sub_value] of Object.entries(value)) {
-                    maybeSet(`${key}.${sub_key}`, sub_value)
-                }
-            } else {
-                maybeSet(key, value)
+            try {
+                const elem = document.getElementById(key);
+                elem.textContent = String(value);
+            } catch (error) {
+                parent.style.backgroundColor = 'yellow'
+                console.log(`Failed to set ${key} --> ${value}`)
             }
         }
     } catch (error) {
-        alert(error);
+        console.log(`Got error: ${error}`)
+        parent.style.backgroundColor = 'red'
+        return false
     }
-}
 
-function maybeSet(id, text) {
-    // try setting value of the object
-    try {
-        const elem = document.getElementById(id);
-        elem.textContent = String(text);
-    } catch (error) {
-        console.log(`Failed to set ${id} --> ${text}`)
-    }
+    parent.style.backgroundColor = ''
+    return true
 }

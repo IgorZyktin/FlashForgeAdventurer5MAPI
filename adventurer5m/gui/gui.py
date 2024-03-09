@@ -1,4 +1,5 @@
 """Handlers for human-readable responses."""
+
 from flask import Blueprint, render_template
 
 from adventurer5m import api as api_module

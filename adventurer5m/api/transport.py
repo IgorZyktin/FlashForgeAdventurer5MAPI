@@ -1,4 +1,5 @@
 """Encoding and decoding machinery."""
+
 import socket
 
 from adventurer5m.api.commands_base import BaseCommand

@@ -1,9 +1,10 @@
 """Handlers for JSON-formatted responses."""
+
 import json
 import logging
 from http import HTTPStatus
 
-from flask import Blueprint, Response, url_for
+from flask import Blueprint, Response
 from flask import abort
 
 from adventurer5m import api as api_module
@@ -15,6 +16,7 @@ LOG = logging.getLogger(__name__)
 
 class JsonResponse(Response):
     """JSON-specific response."""
+
     default_mimetype: str = 'application/json'
 
 

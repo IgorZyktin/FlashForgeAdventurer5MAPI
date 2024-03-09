@@ -1,4 +1,5 @@
 """Application entry point."""
+
 import logging
 
 from flask import Flask

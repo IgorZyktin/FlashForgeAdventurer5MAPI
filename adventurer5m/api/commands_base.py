@@ -1,7 +1,9 @@
 """Base command machinery."""
+
 import abc
 import logging
-from typing import Type, Any, Iterator
+import re
+from typing import Type, Any, Iterator, Pattern
 
 from adventurer5m import exceptions
 
@@ -10,7 +12,9 @@ LOG = logging.getLogger(__name__)
 
 class BaseCommand(abc.ABC):
     """Base class for all commands."""
+
     code: str
+    pattern: Pattern = re.compile(r'.*')
     response: str = ''
 
     def _pre_parse(self) -> Iterator[str]:
@@ -20,10 +24,17 @@ class BaseCommand(abc.ABC):
             {
                 'spacer': '-' * 70,
                 'response': self.response,
-            }
+            },
         )
 
-        head, *body, tail = self.response.strip().splitlines()
+        try:
+            head, *body, tail = self.response.strip().splitlines()
+        except Exception as exc:
+            message = (
+                f'Got response in unusual format: {exc}, {self.response!r}'
+            )
+            LOG.exception(message)
+            raise exceptions.UnexpectedResponse(message)
 
         if tail != 'ok':
             message = f'Result not ends with ok: {self.response!r}'
@@ -32,9 +43,15 @@ class BaseCommand(abc.ABC):
         for line in body:
             yield line.strip()
 
-    @abc.abstractmethod
     def parse(self) -> dict[str, Any]:
         """Process response and return result as JSON."""
+        result: dict[str, Any] = {}
+        lines = self._pre_parse()
+
+        regex_results = self.pattern.search(next(lines))
+        result.update(regex_results.groupdict())
+
+        return result
 
 
 _commands: dict[str, Type[BaseCommand]] = {}

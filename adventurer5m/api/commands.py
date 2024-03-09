@@ -1,42 +1,9 @@
 """Actual implementation of known commands."""
+
 import re
 from typing import Any
 
 from adventurer5m.api.commands_base import BaseCommand, register
-
-NamedNumber = re.compile(
-    r"""
-    ([\w-]+)           # one or more letters
-    :               # semicolon
-    \s*?            # optional space
-    (\d+\.\d+|\d+)  # one or more digits, possibly float
-    """,
-    flags=re.VERBOSE,
-)
-
-NamedDelta = re.compile(
-    r"""
-    (\w+\d*?)       # one or more letters followed by zero or more digits
-    :               # semicolon
-    \s*?            # optional space
-    (\d+\.\d+|\d+)  # one or more digits, possibly float
-    /               # literal slash
-    (\d+\.\d+|\d+)  # one or more digits, possibly float
-    """,
-    flags=re.VERBOSE,
-)
-
-NamedProgress = re.compile(
-    r"""
-    (\w+)  # one or more letters
-    :?     # optional semicolon
-    \s*?   # optional space
-    (\d+)  # one or more digits, possibly float
-    /      # literal slash
-    (\d+)  # one or more digits
-    """,
-    flags=re.VERBOSE,
-)
 
 
 @register
@@ -49,19 +16,27 @@ class Progress(BaseCommand):
         Layer: 163/166
         ok
     """
+
     code = r'~M27\r\n'
+
+    byte_pattern = re.compile(
+        r'SD printing byte (?P<byte_current>\d+)/(?P<byte_target>\d+)'
+    )
+
+    layer_pattern = re.compile(
+        r'Layer: (?P<layer_current>\d+)/(?P<layer_target>\d+)'
+    )
 
     def parse(self) -> dict[str, Any]:
         """Process response and return result as JSON."""
         result: dict[str, Any] = {}
+        lines = self._pre_parse()
 
-        for line in self._pre_parse():
-            for each in NamedProgress.finditer(line):
-                category, current, target = each.groups()
-                result[category.strip()] = {
-                    'current': int(current),
-                    'target': int(target),
-                }
+        bytes_re = self.byte_pattern.search(next(lines))
+        result.update(bytes_re.groupdict())
+
+        layer_re = self.layer_pattern.search(next(lines))
+        result.update(layer_re.groupdict())
 
         return result
 
@@ -75,24 +50,17 @@ class Temperature(BaseCommand):
         T0:239.9/240.0 T1:0.0/0.0 B:69.9/70.0
         ok
     """
+
     code = r'~M105\r\n'
 
-    def parse(self) -> dict[str, Any]:
-        """Process response and return result as JSON."""
-        result: dict[str, Any] = {}
-
-        line = next(self._pre_parse())
-        for each in NamedDelta.finditer(line):
-            category, current, target = each.groups()
-            if category.casefold() == 'B'.casefold():
-                category = 'Bed'
-
-            result[category.strip()] = {
-                'current': float(current),
-                'target': float(target),
-            }
-
-        return result
+    pattern = re.compile(
+        r'T0:\s*?(?P<t0_current>-?(\d+\.\d+|\d+))'
+        r'/(?P<t0_target>-?(\d+\.\d+|\d+))\s*?'
+        r'T1:\s*?-?(?P<t1_current>-?(\d+\.\d+|\d+))'
+        r'/(?P<t1_target>-?(\d+\.\d+|\d+))\s*?'
+        r'B:\s*?(?P<bed_t_current>-?(\d+\.\d+|\d+))'
+        r'/(?P<bed_t_target>-?(\d+\.\d+|\d+))'
+    )
 
 
 @register
@@ -104,18 +72,16 @@ class Position(BaseCommand):
         X:36.900 Y:7.760 Z:33.000 A:486.511 B:0
         ok
     """
+
     code = r'~M114\r\n'
 
-    def parse(self) -> dict[str, Any]:
-        """Process response and return result as JSON."""
-        result: dict[str, Any] = {}
-
-        line = next(self._pre_parse())
-        for each in NamedNumber.finditer(line):
-            key, value = each.groups()
-            result[key.strip()] = float(value)
-
-        return result
+    pattern = re.compile(
+        r'X:\s*?(?P<x_pos>-?(\d+\.\d+|\d+))\s*?'
+        r'Y:\s*?(?P<y_pos>-?(\d+\.\d+|\d+))\s*?'
+        r'Z:\s*?(?P<z_pos>-?(\d+\.\d+|\d+))\s*?'
+        r'A:\s*?(?P<a_pos>-?(\d+\.\d+|\d+))\s*?'
+        r'B:\s*?(?P<b_pos>-?(\d+\.\d+|\d+))'
+    )
 
 
 @register
@@ -133,22 +99,30 @@ class Info(BaseCommand):
         Mac Address:00:00:00:00:00:00
         ok
     """
+
     code = r'~M115\r\n'
+
+    patterns = [
+        re.compile(r'Machine Type:\s*?(?P<machine_type>.+)'),
+        re.compile(r'Machine Name:\s*?(?P<machine_name>.+)'),
+        re.compile(r'Firmware:\s*?(?P<firmware>.+)'),
+        re.compile(r'SN:\s*?(?P<serial_number>.+)'),
+        re.compile(
+            r'X:\s*?(?P<build_volume_x>\d+) '
+            r'Y:\s*?(?P<build_volume_y>\d+) '
+            r'Z:\s*?(?P<build_volume_z>\d+)'
+        ),
+        re.compile(r'Tool Count:\s*?(?P<tool_count>.+)'),
+        re.compile(r'Mac Address:\s*?(?P<mac_address>.+)'),
+    ]
 
     def parse(self) -> dict[str, Any]:
         """Process response and return result as JSON."""
         result: dict[str, Any] = {}
 
-        for line in self._pre_parse():
-            total = line.count(':')
-
-            if total == 3:
-                for each in NamedNumber.finditer(line):
-                    key, value = each.groups()
-                    result[key.strip() + '-zone'] = float(value.strip())
-            else:
-                key, value = line.split(':', maxsplit=1)
-                result[key.strip()] = value.strip()
+        for line, pattern in zip(self._pre_parse(), self.patterns):
+            regex_results = pattern.search(line)
+            result.update(regex_results.groupdict())
 
         return result
 
@@ -167,26 +141,35 @@ class Status(BaseCommand):
         CurrentFile: Portable Cable Winder - Large.gx
         ok
     """
+
     code = r'~M119\r\n'
+
+    patterns = [
+        re.compile(
+            r'Endstop: X-max:\s*?(?P<endstop_x_max>\d+) '
+            r'Y-max:\s*?(?P<endstop_y_max>\d+) '
+            r'Z-min:\s*?(?P<endstop_z_min>\d+)'
+        ),
+        re.compile(r'MachineStatus: (?P<machine_status>.+)'),
+        re.compile(r'MoveMode: (?P<move_mode>.+)'),
+        re.compile(
+            r'Status: S:\s*?(?P<status_s>\d+) '
+            r'L:\s*?(?P<status_l>\d+) '
+            r'J:\s*?(?P<status_j>\d+) '
+            r'F:\s*?(?P<status_f>\d+)'
+        ),
+        re.compile(r'LED: (?P<led>.+)'),
+        re.compile(r'CurrentFile:\s?(?P<current_file>.*)'),
+
+    ]
 
     def parse(self) -> dict[str, Any]:
         """Process response and return result as JSON."""
         result: dict[str, Any] = {}
 
-        for line in self._pre_parse():
-            total = line.count(':')
-            key, value = line.split(':', maxsplit=1)
-
-            if total == 1:
-                result[key.strip()] = value.strip()
-
-            else:
-                category = {}
-                for each in NamedNumber.finditer(value):
-                    sub_key, value = each.groups()
-                    category[sub_key.strip()] = int(value.strip())
-
-                result[key.strip()] = category
+        for line, pattern in zip(self._pre_parse(), self.patterns):
+            regex_results = pattern.search(line)
+            result.update(regex_results.groupdict())
 
         return result
 
@@ -200,8 +183,9 @@ class Hello(BaseCommand):
         Control Success V2.1.
         ok
     """
+
     code = r'~M601 S1\r\n'
 
     def parse(self) -> dict[str, Any]:
         """Process response and return result as JSON."""
-        return {'response': next(self._pre_parse())}
+        return {'message': next(self._pre_parse())}

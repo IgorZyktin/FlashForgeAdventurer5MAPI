@@ -23,3 +23,9 @@ classifiers = [
 
 [project.urls]
 Repository = "https://github.com/IgorZyktin/FlashForgeAdventurer5MAPI"
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+quote-style = "single"

@@ -69,5 +69,14 @@ def execute_command(printer_address: str, command_name: str):
                 status=HTTPStatus.REQUEST_TIMEOUT,
             ),
         )
+    except Exception as exc:
+        LOG.exception('Unexpected error')
+        payload = {'error': str(exc)}
+        abort(
+            JsonResponse(
+                response=json.dumps(payload, ensure_ascii=False),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            ),
+        )
 
     return command.parse()

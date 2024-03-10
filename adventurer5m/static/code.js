@@ -1,24 +1,30 @@
 const DEBUG = true;
+const FAST_UPDATE = 3000;
+const SLOW_UPDATE = 15000;
 
-const intervals = {
+let intervals = {
     loop: 500,
-    info: 30000,
-    status: 15000,
-    progress: 5000,
-    temperature: 5000,
-    position: 10000,
+    info: 5000,
+    status: 10000,
+    progress: FAST_UPDATE,
+    temperature: FAST_UPDATE,
 }
 
-const nextCheck = {
+let nextCheck = {
     info: 0,
     status: 0,
     progress: 0,
     temperature: 0,
-    position: 0,
 }
 
 const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
+function debug(text) {
+    // optionally print
+    if (DEBUG) {
+        console.log(text)
+    }
+}
 
 async function eventLoop(endpoints) {
     // main loop
@@ -27,90 +33,189 @@ async function eventLoop(endpoints) {
         let now = Date.now()
 
         if (nextCheck['info'] < now) {
-            if (await updateValues('info', endpoints['info'])) {
+            // update it only once
+            if (await updateInfo(endpoints['info'])) {
                 nextCheck['info'] = now + 9999999999.0
             } else {
                 nextCheck['info'] = now + intervals['info']
-                continue
             }
         }
 
         if (nextCheck['temperature'] < now) {
-            if (await updateValues('temperature', endpoints['temperature'])) {
-                nextCheck['temperature'] = now + intervals['temperature']
-            } else {
-                continue
-            }
+            await updateTemperature(endpoints['temperature'])
+            nextCheck['temperature'] = now + intervals['temperature']
         }
 
         if (nextCheck['progress'] < now) {
-            if (await updateValues('progress', endpoints['progress'])) {
-                nextCheck['progress'] = now + intervals['progress']
-            } else {
-                continue
-            }
+            await updateProgress(endpoints['progress'])
+            nextCheck['progress'] = now + intervals['progress']
         }
 
         if (nextCheck['status'] < now) {
-            if (await updateValues('status', endpoints['status'])) {
-                nextCheck['status'] = now + intervals['status']
-            } else {
-                continue
-            }
-        }
-
-        if (nextCheck['position'] < now) {
-            if (await updateValues('position', endpoints['position'])) {
-                nextCheck['position'] = now + intervals['position']
-            }
+            await updateStatus(endpoints['status'])
+            nextCheck['status'] = now + intervals['status']
         }
     }
 }
 
-async function updateValues(element, url) {
-    // perform request and alter text values corresponding to response
-    const parent = document.getElementById(element);
+async function updateInfo(url) {
+    // get printer info and update document caption
+    let info = await doRequest(url)
+
+    if (info === null) {
+        return false
+    }
+
+    document.title = info['machine_name'];
+    return true
+}
+
+async function updateTemperature(url) {
+    // request data + alter progress bars
+    let failed = false
+    let temp_info = await doRequest(url)
+
+    if (temp_info === null) {
+        temp_info = {
+            t0_current: '???',
+            t0_target: '???',
+            bed_t_current: '???',
+            bed_t_target: '???',
+        }
+        failed = true
+    }
+
+    rewriteText(
+        [
+            't0_current',
+            't0_target',
+            'bed_t_current',
+            'bed_t_target',
+        ],
+        temp_info,
+    )
+
+    let progress_e = document.getElementById('progress_extruder_t')
+    let progress_b = document.getElementById('progress_bed_t')
+
+    if (failed) {
+        progress_e.value = '0'
+        progress_e.max = '0'
+        progress_b.value = '0'
+        progress_b.max = '0'
+    } else {
+        progress_e.value = temp_info['t0_current']
+        progress_e.max = temp_info['t0_target']
+        progress_b.value = temp_info['bed_t_current']
+        progress_b.max = temp_info['bed_t_target']
+    }
+}
+
+async function updateProgress(url) {
+    // request data + alter progress bars
+    let failed = false
+    let progress_info = await doRequest(url)
+
+    if (progress_info === null) {
+        progress_info = {
+            layer_current: '???',
+            layer_target: '???',
+            byte_current: '???',
+        }
+        failed = true
+    }
+
+    rewriteText(
+        [
+            'layer_current',
+            'layer_target',
+            'byte_current',
+        ],
+        progress_info,
+    )
+
+    let progress_l = document.getElementById('progress_layer')
+    let progress_p = document.getElementById('progress_percent')
+
+    if (failed) {
+        progress_l.value = '0'
+        progress_l.max = '0'
+        progress_p.value = '0'
+        progress_p.max = '0'
+    } else {
+        progress_l.value = progress_info['layer_current']
+        progress_l.max = progress_info['layer_target']
+        progress_p.value = progress_info['byte_current']
+        progress_p.max = '100'
+    }
+}
+
+async function updateStatus(url) {
+    // store info about status and current file name
+    let status_info = await doRequest(url)
+
+    if (status_info === null) {
+        status_info = {
+            machine_status: '???',
+            move_mode: '???',
+            current_file: '???',
+        }
+    }
+
+    rewriteText(
+        [
+            'machine_status',
+            'move_mode',
+            'current_file',
+        ],
+        status_info,
+    )
+
+    if (status_info['machine_status'] === 'READY') {
+        intervals['progress'] = SLOW_UPDATE
+        intervals['temperature'] = SLOW_UPDATE
+    } else {
+        intervals['progress'] = FAST_UPDATE
+        intervals['temperature'] = FAST_UPDATE
+    }
+}
+
+function rewriteText(ids, infoMap) {
+    // update elements with given ids using info from given map
+    for (const eachId of ids) {
+        try {
+            let element = document.getElementById(eachId)
+            element.textContent = infoMap[eachId]
+        } catch (error) {
+            console.log(`Failed to set ${eachId}`)
+        }
+    }
+}
+
+async function doRequest(url) {
+    // perform request and return JSON result
+    let payload = null
 
     try {
-        if (DEBUG) {
-            console.log(`Asking ${url}`)
-        }
-
+        debug(`Asking ${url}`)
         const response = await fetch(url);
-        let payload
 
         try {
             payload = await response.json();
-            if (DEBUG) {
-                console.log(`Got response: ${JSON.stringify(payload)}`)
-            }
+            debug(`Got response: ${JSON.stringify(payload)}`)
         } catch (error) {
             console.log(`Got error: ${error} for response ${response}`)
-            parent.style.backgroundColor = 'red'
-            return false
+            return null
         }
 
         if (response.status !== 200) {
             console.log(`Got error: ${payload['error']}`)
-            parent.style.backgroundColor = 'red'
-            return false
-        }
-
-        for (const [key, value] of Object.entries(payload)) {
-            try {
-                const elem = document.getElementById(key);
-                elem.textContent = String(value);
-            } catch (error) {
-                parent.style.backgroundColor = 'yellow'
-                console.log(`Failed to set ${key} --> ${value}`)
-            }
+            return null
         }
     } catch (error) {
         console.log(`Got error: ${error}`)
-        parent.style.backgroundColor = 'red'
-        return false
+        return null
     }
 
-    parent.style.backgroundColor = ''
-    return true
+    return payload
 }

@@ -12,61 +12,35 @@
 
 <div class="container">
 
-    <div id="temperature" class="element" style="background-color: dimgray">
-        <h2>Температура</h2>
-        <p>T0: <span id="t0_current">???</span>/<span id="t0_target">???</span></p>
-        <p>T1: <span id="t1_current">???</span>/<span id="t1_target">???</span></p>
-        <p>Постель: <span id="bed_t_current">???</span>/<span id="bed_t_target">???</span></p>
+    <div id="temperature" class="element">
+        <div class="header">Температура</div>
+        <div class="content">
+            <p>Экструдер: <span id="t0_current">???</span> C°/<span id="t0_target">???</span> C°</p>
+            <progress id="progress_extruder_t" value="0" max="0"></progress>
+            <p>Постель: <span id="bed_t_current">???</span> C°/<span id="bed_t_target">???</span> C°</p>
+            <progress id="progress_bed_t" value="0" max="0"></progress>
+        </div>
     </div>
 
-    <div id="progress" class="element" style="background-color: dimgray">
-        <h2>Прогресс</h2>
-        <p>Байты: <span id="byte_current">???</span> из <span id="byte_target">???</span></p>
-        <p>Слои: <span id="layer_current">???</span> из <span id="layer_target">???</span></p>
+    <div id="progress" class="element">
+        <div class="header">Прогресс</div>
+        <div class="content">
+            <p>Слой: <span id="layer_current">???</span> из <span id="layer_target">???</span></p>
+            <progress id="progress_layer" value="0" max="0"></progress>
+            <p>Готовность: <span id="byte_current">???</span>%</p>
+            <progress id="progress_percent" value="0" max="0"></progress>
+        </div>
     </div>
 
-    <div id="position" class="element" style="background-color: dimgray">
-        <h2>Положение</h2>
-        <p>X: <span id="x_pos">???</span></p>
-        <p>Y: <span id="y_pos">???</span></p>
-        <p>Z: <span id="z_pos">???</span></p>
-        <p>A: <span id="a_pos">???</span></p>
-        <p>B: <span id="b_pos">???</span></p>
+    <div id="status" class="element">
+        <div class="header">Прочее</div>
+        <div class="content">
+            <p>Статус: <span id="machine_status">???</span></p>
+            <p>Режим: <span id="move_mode">???</span></p>
+            <p>Файл: <span id="current_file">???</span></p>
+        </div>
     </div>
 
-    <div id="status" class="element" style="background-color: dimgray">
-        <h2>Статус</h2>
-        <p>Концевики:
-            X-<span id="endstop_x_max">???</span>
-            Y-<span id="endstop_y_max">???</span>
-            Z-<span id="endstop_z_min">???</span>
-        </p>
-        <p>Статус: <span id="machine_status">???</span></p>
-        <p>Режим: <span id="move_mode">???</span></p>
-        <p>Дополнительно:
-            S-<span id="status_s">???</span>
-            L-<span id="status_l">???</span>
-            J-<span id="status_j">???</span>
-            F-<span id="status_f">???</span>
-        </p>
-        <p>Подсветка: <span id="led">???</span></p>
-        <p>Файл: <span id="current_file">???</span></p>
-    </div>
-
-    <div id="info" class="element" style="background-color: dimgray">
-        <h2>Информация о принтере</h2>
-        <p>Тип: <span id="machine_type">???</span></p>
-        <p>Название: <span id="machine_name">???</span></p>
-        <p>Версия прошивки: <span id="firmware">???</span></p>
-        <p>Серийный номер: <span id="serial_number">???</span></p>
-        <p>Зона печати:
-            X-<span id="build_volume_x">???</span>
-            Y-<span id="build_volume_y">???</span>
-            Z-<span id="build_volume_z">???</span>
-        </p>
-        <p>Число головок: <span id="tool_count">???</span></p>
-        <p>MAC адрес: <span id="mac_address">???</span></p>
-    </div>
 </div>
 
 <script>
@@ -76,7 +50,6 @@
                 status: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="status") }}',
                 progress: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="progress") }}',
                 temperature: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="temperature") }}',
-                position: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="position") }}',
                 info: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="info") }}',
             }
         )

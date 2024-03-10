@@ -1,21 +1,46 @@
 body {
-    background-color: gray;
+    background-color: #4f4f4f;
     text-align: center;
     font-family: "Lucida Console", "Courier New", monospace;
+    font-size: larger;
 }
 
 #video_feed {
     width: 100%;
     max-width: 1024px;
-    margin: auto;
+    margin: 1em auto;
     display: block;
+    border: 3px solid #9a9a9a;
+    border-radius: 10px;
+    gap: 1em
 }
 
 .container {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2em;
+    flex-direction: row;
 }
 
 .element {
+    background-color: dimgray;
+    padding: 1em;
+    border: 3px solid #9a9a9a;
+    border-radius: 10px;
+    margin-right: 2em;
+    margin-left: 2em;
+    min-width: 300px;
+}
 
+.header {
+    font-weight: 700;
+}
+
+.content {
+
+}
+
+progress {
+    width: 100%;
 }

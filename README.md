@@ -12,9 +12,9 @@
 с `Flash Forge Adventurer 5M Pro`, вероятно будет работать с другими принтерами
 данного производителя.
 
-![interface](/doc/interface.png)
+![interface](./doc/interface_ru.png)
 
-[Читать документацию](/doc/ru.md)
+[Читать документацию](./doc/ru.md)
 
 При разработке использованы материалы:
 
@@ -34,6 +34,10 @@ It is written for cases when you have printer with standard firmware, and you
 do not want to modify it. But still want to get, for example, print progress.
 Application was tested with  `Flash Forge Adventurer 5M Pro`, but probably will
 work with other printers of this manufacturer.
+
+![interface](./doc/interface_en.png)
+
+[Read the docs](./doc/en.md)
 
 This project is based on:
 

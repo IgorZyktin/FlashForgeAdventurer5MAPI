@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ printer_ip }}:{{ printer_port }}</title>
+    <script src="{{ url_for('static', filename='code.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<img id="video_feed" src="http://{{ printer_ip }}:8080/?action=stream" alt="video from the printer">
+
+<div class="container">
+
+    <div id="temperature" class="element">
+        <div class="header">Temperature</div>
+        <div class="content">
+            <p>Extruder: <span id="t0_current">???</span> C°/<span id="t0_target">???</span> C°</p>
+            <progress id="progress_extruder_t" value="0" max="0"></progress>
+            <p>Bed: <span id="bed_t_current">???</span> C°/<span id="bed_t_target">???</span> C°</p>
+            <progress id="progress_bed_t" value="0" max="0"></progress>
+        </div>
+    </div>
+
+    <div id="progress" class="element">
+        <div class="header">Progress</div>
+        <div class="content">
+            <p>Layer: <span id="layer_current">???</span> из <span id="layer_target">???</span></p>
+            <progress id="progress_layer" value="0" max="0"></progress>
+            <p>Completion: <span id="byte_current">???</span>%</p>
+            <progress id="progress_percent" value="0" max="0"></progress>
+        </div>
+    </div>
+
+    <div id="status" class="element">
+        <div class="header">Misc</div>
+        <div class="content">
+            <p>Status: <span id="machine_status">???</span></p>
+            <p>Mode: <span id="move_mode">???</span></p>
+            <p>Filename: <span id="current_file">???</span></p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    {
+        eventLoop(
+            {
+                status: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="status") }}',
+                progress: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="progress") }}',
+                temperature: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="temperature") }}',
+                info: '{{ url_for("api.execute_command", printer_address=printer_address, command_name="info") }}',
+            }
+        )
+    }
+</script>
+
+</body>
+</html>

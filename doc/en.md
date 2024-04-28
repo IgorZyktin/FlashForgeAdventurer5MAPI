@@ -46,8 +46,8 @@ Build and run:
 ```shell
 git clone https://github.com/IgorZyktin/FlashForgeAdventurer5MAPI.git
 cd FlashForgeAdventurer5MAPI
-docker build -t flashforge:v0.1 .
-docker run -d -p 9876:9876 flashforge:v0.1
+docker build -t flashforge:v0.2 .
+docker run -d -p 9876:9876 flashforge:v0.2
 ```
 
 GUI is located at:

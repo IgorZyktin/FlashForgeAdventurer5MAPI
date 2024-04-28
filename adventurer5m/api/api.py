@@ -23,7 +23,7 @@ class JsonResponse(Response):
 @api.route('/')
 def index():
     """Return current version of the app."""
-    return {'version': '0.1'}
+    return {'version': '0.2'}
 
 
 @api.route('/api/execute/<string:printer_address>/<string:command_name>')

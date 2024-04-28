@@ -60,14 +60,101 @@ http://127.0.0.1:9876/ru/<ip адрес вашего принтера>
 
 Если есть желание, вы можете вручную запрашивать данные у API.
 
-Примеры запросов:
+Обратите внимание на то, что приложение не модифицирует ответ API. Будет
+возвращён ответ со строковыми значениями в том формате, в котором они были
+получены.
 
 ```shell
+PORT=9876
 PRINTER_IP=192.168.1.45
-curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/progress
-curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/temperature
-curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/position
-curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/info
-curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/status
-curl http://127.0.0.1:9876/api/execute/${PRINTER_IP}/hello
+```
+
+```shell
+curl http://127.0.0.1:${PORT}/api/execute/${PRINTER_IP}/progress
+```
+
+```json
+{
+    "byte_current": "0",
+    "byte_target": "100",
+    "layer_current": "0",
+    "layer_target": "0"
+}
+```
+
+```shell
+curl http://127.0.0.1:${PORT}/api/execute/${PRINTER_IP}/temperature
+```
+
+```json
+{
+    "bed_t_current": "24.2",
+    "bed_t_target": "0.0",
+    "t0_current": "24.8",
+    "t0_target": "0.0",
+    "t1_current": "0.0",
+    "t1_target": "0.0"
+}
+```
+
+```shell
+curl http://127.0.0.1:${PORT}/api/execute/${PRINTER_IP}/position
+```
+
+```json
+{
+    "a_pos": "0.000",
+    "b_pos": "0",
+    "x_pos": "0.000",
+    "y_pos": "0.000",
+    "z_pos": "0.000"
+}
+```
+
+```shell
+curl http://127.0.0.1:${PORT}/api/execute/${PRINTER_IP}/info
+```
+
+```json
+{
+    "build_volume_x": "220",
+    "build_volume_y": "220",
+    "build_volume_z": "220",
+    "firmware": " v2.4.5",
+    "mac_address": "00:00:00:00:00:00",
+    "machine_name": "Adventurer 5M Pro",
+    "machine_type": "Flashforge Adventurer 5M Pro",
+    "serial_number": "XXXXXXX0X00000",
+    "tool_count": "1"
+}
+```
+
+```shell
+curl http://127.0.0.1:${PORT}/api/execute/${PRINTER_IP}/status
+```
+
+```json
+{
+    "current_file": "",
+    "endstop_x_max": "110",
+    "endstop_y_max": "110",
+    "endstop_z_min": "0",
+    "led": "1",
+    "machine_status": "READY",
+    "move_mode": "READY",
+    "status_f": "0",
+    "status_j": "0",
+    "status_l": "0",
+    "status_s": "1"
+}
+```
+
+```shell
+curl http://127.0.0.1:${PORT}/api/execute/${PRINTER_IP}/hello
+```
+
+```json
+{
+    "message": "Control Success V2.1."
+}
 ```

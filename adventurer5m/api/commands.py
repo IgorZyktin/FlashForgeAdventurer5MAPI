@@ -122,7 +122,12 @@ class Info(BaseCommand):
 
         for line, pattern in zip(self._pre_parse(), self.patterns):
             regex_results = pattern.search(line)
-            result.update(regex_results.groupdict())
+            result.update(
+                {
+                    key: value.strip()
+                    for key, value in regex_results.groupdict().items()
+                }
+            )
 
         return result
 

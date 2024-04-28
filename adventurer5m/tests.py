@@ -116,14 +116,14 @@ class TestInfo(AbstractTests.BaseTestCase):
     @staticmethod
     def valid_result():
         return {
-            'machine_type': ' Flashforge Adventurer 5M Pro',
-            'machine_name': ' Adventurer 5M Pro',
-            'firmware': ' v2.4.5',
-            'serial_number': ' 12345',
+            'machine_type': 'Flashforge Adventurer 5M Pro',
+            'machine_name': 'Adventurer 5M Pro',
+            'firmware': 'v2.4.5',
+            'serial_number': '12345',
             'build_volume_x': '220',
             'build_volume_y': '220',
             'build_volume_z': '220',
-            'tool_count': ' 1',
+            'tool_count': '1',
             'mac_address': '00:00:00:00:00:00',
         }
 
